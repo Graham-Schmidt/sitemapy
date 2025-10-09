@@ -1,0 +1,1 @@
+A module for converting lists of URLs into sitemap XML files.
