@@ -10,7 +10,7 @@ from sitemapy import Sitemap
 
 sitemap = Sitemap()
 
-sitemap.load_from_list(
+sitemap.build_from_list(
     urls=[
        "https://example.com/",
         "https://example.org/", 

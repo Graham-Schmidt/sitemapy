@@ -13,7 +13,7 @@ class Sitemap:
         self.output_filename: str = ""
         self.urls: list[URLEntry] = []
 
-    def load_from_list(self, urls: list[str]):
+    def build_from_list(self, urls: list[str]):
         """Builds basic sitemap from list of URLs, with no additonal attributes"""
         if len(urls) < 1:
             return ValueError("URL list must contain at least 1 URL")
