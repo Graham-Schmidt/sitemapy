@@ -3,7 +3,7 @@
 
 ## Basic Usage
 
-To create a sitemap a basic sitemap:
+To create a basic sitemap:
 
 ```python
 from sitemapy import Sitemap
