@@ -8,16 +8,14 @@ To create a basic sitemap:
 ```python
 from sitemapy import Sitemap
 
-sitemap = Sitemap()
-
-sitemap.build_from_list(
+map = Sitemap.from_list(
     urls=[
        "https://example.com/",
-        "https://example.org/", 
+        "https://example.com/about/", 
     ]
 )
 
-sitemap.write_sitemap_to_file(
+map.write_to_file(
     output_filename="custom-sitemap.xml"
 )
 ```
@@ -25,7 +23,7 @@ sitemap.write_sitemap_to_file(
 Set all lastmod values to today's date with `lastmod_now`
 
 ```python
-sitemap.write_sitemap_to_file(
+map.write_to_file(
     output_filename="today-sitemap.xml",
     lastmod_now=True,
 )
