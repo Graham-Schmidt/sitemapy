@@ -9,9 +9,17 @@ SITEMAP_NS = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
 
 
 class URLEntry:
-    def __init__(self, loc: str):
+    def __init__(
+        self,
+        loc: str,
+        lastmod: str | None = None,
+        changefreq: str | None = None,
+        priority: float | None = None,
+    ):
         self.loc = loc
-        self.lastmod = ""
+        self.lastmod = lastmod
+        self.changefreq = changefreq
+        self.priority = priority
 
 
 class Sitemap:
@@ -95,15 +103,22 @@ class Sitemap:
         return self
 
     def _append_url_element(
-        self, root: ET.Element, url: str, lastmod_now: bool = False
+        self, root: ET.Element, url_entry: URLEntry, lastmod_now: bool = False
     ):
         """Append URL element to given root element"""
         url_elem = ET.SubElement(root, "url")
         loc = ET.SubElement(url_elem, "loc")
 
-        if lastmod_now:
-            lastmod = ET.SubElement(url_elem, "lastmod")
-            date_string = datetime.now().strftime("%Y-%m-%d")
-            lastmod.text = date_string
+        loc.text = url_entry.loc
 
-        loc.text = url
+        if url_entry.lastmod is not None:
+            lastmod = ET.SubElement(url_elem, "lastmod")
+            lastmod.text = url_entry.lastmod
+
+        if url_entry.changefreq is not None:
+            changefreq = ET.SubElement(url_elem, "changefreq")
+            changefreq.text = url_entry.changefreq
+
+        if url_entry.priority is not None:
+            priority = ET.SubElement(url_elem, "priority")
+            priority.text = str(url_entry.priority)

@@ -15,9 +15,7 @@ map = Sitemap.from_list(
     ]
 )
 
-map.write_to_file(
-    output_filename="custom-sitemap.xml"
-)
+map.write_to_file(output_filename="custom-sitemap.xml")
 ```
 
 Set all lastmod values to today's date with `lastmod_now`
