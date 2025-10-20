@@ -5,6 +5,8 @@ import xml.etree.ElementTree as ET
 
 from defusedxml import ElementTree as DET
 
+SITEMAP_NS = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+
 
 class URLEntry:
     def __init__(self, full_url: str):
@@ -17,7 +19,7 @@ class Sitemap:
         self.urls: list[URLEntry] = []
 
     @classmethod
-    def from_file(cls, path: Union[str, Path]):
+    def from_file(cls, path: Union[str, Path]) -> "Sitemap":
         """
         Builds sitemap object from provided XML file
 
@@ -33,30 +35,40 @@ class Sitemap:
 
         et = DET.parse(path)
         root = et.getroot()
-        for elem in root.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}url"):
-            url_entry = None
-            for sub_elem in elem:
-                if "loc" in sub_elem.tag:
-                    url_entry = URLEntry(full_url=sub_elem.text)
-                elif "lastmod" in sub_elem.tag:
-                    url_entry.lastmod = sub_elem.text
-            instance.urls.append(url_entry)
+        for element in root.findall(
+            ".//{http://www.sitemaps.org/schemas/sitemap/0.9}url"
+        ):
+            loc_element = element.find(f"{SITEMAP_NS}loc")
+            if loc_element is not None and loc_element.text:
+                url_entry = URLEntry(full_url=loc_element.text)
+
+                lastmod_elem = element.find(f"{SITEMAP_NS}lastmod")
+                if lastmod_elem is not None and lastmod_elem.text:
+                    url_entry.lastmod = lastmod_elem.text
+
+                instance.urls.append(url_entry)
 
         return instance
 
     @classmethod
-    def from_list(self, urls: list[str]):
+    def from_list(cls, urls: list[str]) -> "Sitemap":
         """Builds basic sitemap from list of URLs, with no additonal attributes"""
+        instance = cls()
+
         if len(urls) < 1:
-            return ValueError("URL list must contain at least 1 URL")
+            raise ValueError("URL list must contain at least 1 URL")
 
         for url in urls:
             entry = URLEntry(
                 full_url=url,
             )
-            self.urls.append(entry)
+            instance.urls.append(entry)
 
-    def write_to_file(self, output_filename: str = None, lastmod_now: bool = False):
+        return instance
+
+    def write_to_file(
+        self, output_filename: str = None, lastmod_now: bool = False
+    ) -> "Sitemap":
         """Write a sitemap XML file from current instance.
 
         Args:
@@ -66,25 +78,21 @@ class Sitemap:
         Returns:
             bool: Operation success
         """
-        try:
-            if not output_filename:
-                output_filename = "sitemap.xml"
+        if not output_filename:
+            output_filename = "sitemap.xml"
 
-            root = ET.Element(
-                "urlset", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        root = ET.Element("urlset", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9")
+
+        for url_entry in self.urls:
+            self._append_url_element(
+                root=root, url=url_entry.full_url, lastmod_now=lastmod_now
             )
 
-            for url_entry in self.urls:
-                self._append_url_element(
-                    root=root, url=url_entry.full_url, lastmod_now=lastmod_now
-                )
+        tree = ET.ElementTree(root)
+        ET.indent(tree, space="   ")
+        tree.write(output_filename, encoding="utf-8", xml_declaration=True)
 
-            tree = ET.ElementTree(root)
-            ET.indent(tree, space="   ")
-            tree.write(output_filename, encoding="utf-8", xml_declaration=True)
-            return True
-        except:
-            return False
+        return self
 
     def _append_url_element(
         self, root: ET.Element, url: str, lastmod_now: bool = False
