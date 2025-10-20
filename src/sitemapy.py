@@ -1,5 +1,9 @@
 from datetime import datetime
+from pathlib import Path
+from typing import Union
 import xml.etree.ElementTree as ET
+
+from defusedxml import ElementTree as DET
 
 
 class URLEntry:
@@ -10,10 +14,38 @@ class URLEntry:
 
 class Sitemap:
     def __init__(self):
-        self.output_filename: str = ""
         self.urls: list[URLEntry] = []
 
-    def build_from_list(self, urls: list[str]):
+    @classmethod
+    def from_file(cls, path: Union[str, Path]):
+        """
+        Builds sitemap object from provided XML file
+
+        Args:
+            path (str or Path): the filepath to the XML file
+
+        Returns:
+            Sitemap: instance of Sitemap
+        """
+        instance = cls()
+
+        path = Path(path)
+
+        et = DET.parse(path)
+        root = et.getroot()
+        for elem in root.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}url"):
+            url_entry = None
+            for sub_elem in elem:
+                if "loc" in sub_elem.tag:
+                    url_entry = URLEntry(full_url=sub_elem.text)
+                elif "lastmod" in sub_elem.tag:
+                    url_entry.lastmod = sub_elem.text
+            instance.urls.append(url_entry)
+
+        return instance
+
+    @classmethod
+    def from_list(self, urls: list[str]):
         """Builds basic sitemap from list of URLs, with no additonal attributes"""
         if len(urls) < 1:
             return ValueError("URL list must contain at least 1 URL")
@@ -24,10 +56,7 @@ class Sitemap:
             )
             self.urls.append(entry)
 
-    # proposal - turn into `build_from_list()`
-    def write_sitemap_to_file(
-        self, output_filename: str = None, lastmod_now: bool = False
-    ):
+    def write_to_file(self, output_filename: str = None, lastmod_now: bool = False):
         """Write a sitemap XML file from current instance.
 
         Args:
