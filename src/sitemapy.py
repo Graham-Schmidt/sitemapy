@@ -10,7 +10,7 @@ SITEMAP_NS = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
 
 class URLEntry:
     def __init__(self, full_url: str):
-        self.full_url = full_url
+        self.loc = full_url
         self.lastmod = ""
 
 
@@ -60,7 +60,7 @@ class Sitemap:
 
         for url in urls:
             entry = URLEntry(
-                full_url=url,
+                loc=url,
             )
             instance.urls.append(entry)
 
