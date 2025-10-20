@@ -9,8 +9,8 @@ SITEMAP_NS = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
 
 
 class URLEntry:
-    def __init__(self, full_url: str):
-        self.loc = full_url
+    def __init__(self, loc: str):
+        self.loc = loc
         self.lastmod = ""
 
 
@@ -40,7 +40,7 @@ class Sitemap:
         ):
             loc_element = element.find(f"{SITEMAP_NS}loc")
             if loc_element is not None and loc_element.text:
-                url_entry = URLEntry(full_url=loc_element.text)
+                url_entry = URLEntry(loc=loc_element.text)
 
                 lastmod_elem = element.find(f"{SITEMAP_NS}lastmod")
                 if lastmod_elem is not None and lastmod_elem.text:
@@ -85,7 +85,7 @@ class Sitemap:
 
         for url_entry in self.urls:
             self._append_url_element(
-                root=root, url=url_entry.full_url, lastmod_now=lastmod_now
+                root=root, url=url_entry.loc, lastmod_now=lastmod_now
             )
 
         tree = ET.ElementTree(root)
