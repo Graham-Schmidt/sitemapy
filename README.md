@@ -31,10 +31,12 @@ sitemap.write_to_file("sitemap.xml")
 </urlset>
 ```
 
+
 ## Common Usage
 
 ### Adding URLs Incrementally
 ```python
+
 sitemap = Sitemap()
 sitemap.add_url("https://example.com/", lastmod="2025-01-15")
 sitemap.add_url("https://example.com/blog/", priority=0.8)
@@ -43,8 +45,11 @@ sitemap.write_to_file()
 
 ### Setting All Dates to Today
 ```python
-sitemap.write_to_file("sitemap.xml", lastmod_now=True)
+map.set_all_lastmod("2025-12-01")
+
+map.set_all_lastmod_to_today().write_to_file("today-sitemap.xml")
 ```
+
 
 ### Using URLEntry Objects for More Control
 ```python

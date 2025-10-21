@@ -110,14 +110,11 @@ class Sitemap:
         self.urls = unique
         return self
 
-    def write_to_file(
-        self, output_filename: str = None, lastmod_now: bool = False
-    ) -> "Sitemap":
+    def write_to_file(self, output_filename: str = None) -> "Sitemap":
         """Write a sitemap XML file from current instance.
 
         Args:
             output_filename (str) [Optional]: The desired name of the XML file. Default = "sitemap.xml
-            lastmod_now (bool): Create lastmod attribute per URL, set to today's date. Default = False
 
         Returns:
             bool: Operation success
@@ -128,9 +125,7 @@ class Sitemap:
         root = ET.Element("urlset", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9")
 
         for url_entry in self.urls:
-            self._append_url_element(
-                root=root, url_entry=url_entry, lastmod_now=lastmod_now
-            )
+            self._append_url_element(root=root, url_entry=url_entry)
 
         tree = ET.ElementTree(root)
         ET.indent(tree, space="   ")
@@ -138,9 +133,18 @@ class Sitemap:
 
         return self
 
-    def _append_url_element(
-        self, root: ET.Element, url_entry: URLEntry, lastmod_now: bool = False
-    ):
+    def set_all_lastmod(self, date: str) -> "Sitemap":
+        """Set lastmod for all URLs to the specified date"""
+        for url in self.urls:
+            url.lastmod = date
+        return self
+
+    def set_all_lastmod_to_today(self) -> "Sitemap":
+        """Set lastmod for all URLs to today's date"""
+        today = datetime.now().strftime("%Y-%m-%d")
+        return self.set_all_lastmod(today)
+
+    def _append_url_element(self, root: ET.Element, url_entry: URLEntry):
         """Append URL element to given root element"""
         url_elem = ET.SubElement(root, "url")
         loc = ET.SubElement(url_elem, "loc")
@@ -150,10 +154,6 @@ class Sitemap:
         if url_entry.lastmod is not None:
             lastmod = ET.SubElement(url_elem, "lastmod")
             lastmod.text = url_entry.lastmod
-
-        elif lastmod_now:
-            lastmod = ET.SubElement(url_elem, "lastmod")
-            lastmod.text = datetime.now().strftime("%Y-%m-%d")
 
         if url_entry.changefreq is not None:
             changefreq = ET.SubElement(url_elem, "changefreq")
