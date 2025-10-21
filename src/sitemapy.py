@@ -110,12 +110,6 @@ class Sitemap:
         self.urls = unique
         return self
 
-    def __len__(self):
-        return len(self.urls)
-
-    def __iter__(self):
-        return iter(self.urls)
-
     def write_to_file(
         self, output_filename: str = None, lastmod_now: bool = False
     ) -> "Sitemap":
@@ -168,3 +162,9 @@ class Sitemap:
         if url_entry.priority is not None:
             priority = ET.SubElement(url_elem, "priority")
             priority.text = str(url_entry.priority)
+
+    def __len__(self):
+        return len(self.urls)
+
+    def __iter__(self):
+        return iter(self.urls)
