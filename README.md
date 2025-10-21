@@ -25,3 +25,17 @@ map.write_to_file(
     output_filename="today-sitemap.xml",
     lastmod_now=True,
 )
+```
+Add a single URL either from a string or a URLEntry object
+
+```python
+from sitemapy import URLEntry
+
+map.add_url(url="https://www.example.com/", lastmod="04-12-2025")
+
+url = URLEntry(
+    loc="https://www.example.com/,
+    lastmod="04-12-2025",
+)
+map.add_url(url)
+```

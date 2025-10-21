@@ -63,6 +63,9 @@ class Sitemap:
         """Builds basic sitemap from list of URLs, with no additonal attributes"""
         instance = cls()
 
+        if not isinstance(urls, list):
+            raise TypeError(f"URLs must be in list. Recieved: {type(urls)}")
+
         if len(urls) < 1:
             raise ValueError("URL list must contain at least 1 URL")
 
@@ -73,6 +76,45 @@ class Sitemap:
             instance.urls.append(entry)
 
         return instance
+
+    def add_url(self, url: str | URLEntry, **kwargs) -> "Sitemap":
+        """Add URL entry to sitemap"""
+        if isinstance(url, URLEntry):
+            self.urls.append(url)
+        else:
+            self.urls.append(URLEntry(loc=url, **kwargs))
+
+        return self
+
+    def remove_url(self, url: str) -> "Sitemap":
+        """Remove URL from sitemap"""
+        self.urls = [u for u in self.urls if u.loc != url]
+        return self
+
+    def get_urls_by_pattern(self, pattern: str) -> "URLEntry":
+        """Get list of URLEntries matching pattern"""
+        import re
+
+        regex = re.compile(pattern)
+        res = [u for u in self.urls if regex.search(u.loc)]
+        return res
+
+    def deduplicate(self) -> "Sitemap":
+        """Remove duplicate URLs"""
+        seen = set()
+        unique = []
+        for u in self.urls:
+            if u.loc not in seen:
+                seen.add(u.loc)
+                unique.append(u)
+        self.urls = unique
+        return self
+
+    def __len__(self):
+        return len(self.urls)
+
+    def __iter__(self):
+        return iter(self.urls)
 
     def write_to_file(
         self, output_filename: str = None, lastmod_now: bool = False
@@ -93,7 +135,7 @@ class Sitemap:
 
         for url_entry in self.urls:
             self._append_url_element(
-                root=root, url=url_entry.loc, lastmod_now=lastmod_now
+                root=root, url_entry=url_entry, lastmod_now=lastmod_now
             )
 
         tree = ET.ElementTree(root)
@@ -114,6 +156,10 @@ class Sitemap:
         if url_entry.lastmod is not None:
             lastmod = ET.SubElement(url_elem, "lastmod")
             lastmod.text = url_entry.lastmod
+
+        elif lastmod_now:
+            lastmod = ET.SubElement(url_elem, "lastmod")
+            lastmod.text = datetime.now().strftime("%Y-%m-%d")
 
         if url_entry.changefreq is not None:
             changefreq = ET.SubElement(url_elem, "changefreq")
