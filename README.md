@@ -74,3 +74,18 @@ sitemap.add_url("https://example.com/new-page/")
 sitemap.deduplicate()
 sitemap.write_to_file("updated-sitemap.xml")
 ```
+
+## Hreflang
+Sitemapy makes creating hreflang alternates to URL entries easy.
+
+```python
+from sitemapy import URLEntry, HreflangAlternate
+url = URLEntry(loc="https://www.example.com/)
+
+url.add_alternate(href="https://www.example.de/", hreflang="de-de")
+
+href_alt = HreflangAlternate(href="https://www.example.es/", hreflang="es-es")
+url.add_alternate(href_alt)
+
+url.add_alternates([{"href": "https://www.example.de", "hreflang": "de-de"}, {"href": "https://www.example.es", "hreflang": "es-es"}])
+```
