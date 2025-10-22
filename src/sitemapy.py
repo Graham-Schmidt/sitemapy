@@ -20,6 +20,47 @@ class URLEntry:
         self.lastmod = lastmod
         self.changefreq = changefreq
         self.priority = priority
+        self.hreflang_alts: list[HreflangAlternate] = []
+
+    def add_alternate(
+        self, href_alt=None, hreflang: str = "", href: str = ""
+    ) -> "URLEntry":
+        """Add single hreflang alternate to URL"""
+        if (not href_alt) and (not hreflang and not href):
+            raise ValueError(
+                "Either HreflangAlternate or both hreflang and href are required"
+            )
+        if isinstance(href_alt, HreflangAlternate):
+            self.hreflang_alts.append(href_alt)
+        else:
+            self.hreflang_alts.append(HreflangAlternate(hreflang=hreflang, href=href))
+
+        return self
+
+    def add_alternates(self, alternates: list[dict]) -> "URLEntry":
+        """Add multiple hreflang alternates to URL via dictionary"""
+        for alt in alternates:
+            href = alt.get("href")
+            hreflang = alt.get("hreflang")
+
+            if not href and not hreflang:
+                raise ValueError("Missing both required fields: href and hreflang")
+            if not href or not hreflang:
+                raise ValueError(
+                    f"Missing required field: {'href' if not href else 'hreflang'}"
+                )
+
+            href_alt = HreflangAlternate(hreflang=hreflang, href=href)
+            self.hreflang_alts.append(href_alt)
+
+        return self
+
+
+class HreflangAlternate:
+    def __init__(self, hreflang: str, href: str):
+        self.rel = "alternate"
+        self.hreflang = hreflang
+        self.href = href
 
 
 class Sitemap:
@@ -162,6 +203,16 @@ class Sitemap:
         if url_entry.priority is not None:
             priority = ET.SubElement(url_elem, "priority")
             priority.text = str(url_entry.priority)
+
+        if url_entry.hreflang_alts:
+            for alt in url_entry.hreflang_alts:
+                _ = ET.SubElement(
+                    url_elem,
+                    "{http://www.w3.org/1999/xhtml}link",
+                    rel="alternate",
+                    hreflang=alt.hreflang,
+                    href=alt.href,
+                )
 
     def __len__(self):
         return len(self.urls)
