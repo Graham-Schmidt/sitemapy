@@ -88,5 +88,8 @@ url.add_alternate(href="https://www.example.de/", hreflang="de-de")
 href_alt = HreflangAlternate(href="https://www.example.es/", hreflang="es-es")
 url.add_alternate(href_alt)
 
-url.add_alternates([{"href": "https://www.example.de", "hreflang": "de-de"}, {"href": "https://www.example.es", "hreflang": "es-es"}])
+url.add_alternates([
+   {"href": "https://www.example.de", "hreflang": "de-de"},
+   {"href": "https://www.example.es", "hreflang": "es-es"},
+   ])
 ```
