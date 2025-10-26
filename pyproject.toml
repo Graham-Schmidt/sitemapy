@@ -5,11 +5,20 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "sitemapy"
 version = "0.1.0"
+authors = [
+    { name="Graham Schmidt", email="graham.n.schmidt@gmail.com" },
+]
 description = "Python package that generates SEO-friendly XML sitemaps"
 requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "defusedxml==0.7.1",
 ]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
 
 [project.optional-dependencies]
 dev = [
@@ -18,3 +27,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[project.urls]
+Homepage = "https://github.com/Graham-Schmidt/sitemapy"
+Issues = "https://github.com/Graham-Schmidt/sitemapy/issues"
