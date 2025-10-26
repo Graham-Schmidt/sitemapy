@@ -81,7 +81,7 @@ Sitemapy makes creating hreflang alternates to URL entries easy.
 ```python
 from sitemapy import URLEntry, HreflangAlternate
 
-url = URLEntry(loc="https://www.example.com/)
+url = URLEntry(loc="https://www.example.com/")
 
 url.add_alternate(href="https://www.example.de/", hreflang="de-de")
 

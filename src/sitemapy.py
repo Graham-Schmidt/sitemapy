@@ -96,7 +96,7 @@ class Sitemap:
                 priority_element = element.find(f"{SITEMAP_NS}priority")
 
                 if priority_element is not None and priority_element.text:
-                    url_entry.priority = priority_element.text
+                    url_entry.priority = float(priority_element.text)
 
                 changefreq_element = element.find(f"{SITEMAP_NS}changefreq")
 
@@ -140,7 +140,7 @@ class Sitemap:
         self.urls = [u for u in self.urls if u.loc != url]
         return self
 
-    def get_urls_by_pattern(self, pattern: str) -> "URLEntry":
+    def get_urls_by_pattern(self, pattern: str) -> list["URLEntry"]:
         """Get list of URLEntries matching pattern"""
         import re
 
@@ -283,7 +283,6 @@ class SitemapIndex:
                 instance.index_entries.append(entry)
             elif isinstance(url, IndexEntry):
                 instance.index_entries.append(url)
-        
 
         return instance
 
@@ -299,7 +298,7 @@ class SitemapIndex:
     def remove_sitemap(self, url: str) -> "SitemapIndex":
         """Remove sitemap from sitemap index by URL"""
         self.index_entries = [u for u in self.index_entries if u.loc != url]
-        
+
         return self
 
     def write_to_file(self, output_filename: str = None) -> "SitemapIndex":
@@ -315,7 +314,7 @@ class SitemapIndex:
             output_filename = "sitemap-index.xml"
 
         root = ET.Element(
-            "sitemap", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+            "sitemapindex", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         )
 
         for sitemap in self.index_entries:
