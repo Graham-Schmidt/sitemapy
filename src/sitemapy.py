@@ -1,6 +1,5 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Union
 import xml.etree.ElementTree as ET
 
 from defusedxml import ElementTree as DET
@@ -68,7 +67,7 @@ class Sitemap:
         self.urls: list[URLEntry] = []
 
     @classmethod
-    def from_file(cls, path: Union[str, Path]) -> "Sitemap":
+    def from_file(cls, path: str | Path) -> "Sitemap":
         """
         Builds sitemap object from provided XML file
 
@@ -84,37 +83,46 @@ class Sitemap:
 
         et = DET.parse(path)
         root = et.getroot()
-        for element in root.findall(
-            ".//{http://www.sitemaps.org/schemas/sitemap/0.9}url"
-        ):
+        for element in root.findall(f".//{SITEMAP_NS}url"):
             loc_element = element.find(f"{SITEMAP_NS}loc")
             if loc_element is not None and loc_element.text:
                 url_entry = URLEntry(loc=loc_element.text)
 
-                lastmod_elem = element.find(f"{SITEMAP_NS}lastmod")
-                if lastmod_elem is not None and lastmod_elem.text:
-                    url_entry.lastmod = lastmod_elem.text
+                lastmod_element = element.find(f"{SITEMAP_NS}lastmod")
+
+                if lastmod_element is not None and lastmod_element.text:
+                    url_entry.lastmod = lastmod_element.text
+
+                priority_element = element.find(f"{SITEMAP_NS}priority")
+
+                if priority_element is not None and priority_element.text:
+                    url_entry.priority = priority_element.text
+
+                changefreq_element = element.find(f"{SITEMAP_NS}changefreq")
+
+                if changefreq_element is not None and changefreq_element.text:
+                    url_entry.changefreq = changefreq_element.text
 
                 instance.urls.append(url_entry)
 
         return instance
 
     @classmethod
-    def from_list(cls, urls: list[str]) -> "Sitemap":
+    def from_list(cls, urls: list[str | URLEntry]) -> "Sitemap":
         """Builds basic sitemap from list of URLs, with no additonal attributes"""
         instance = cls()
 
         if not isinstance(urls, list):
-            raise TypeError(f"URLs must be in list. Recieved: {type(urls)}")
-
-        if len(urls) < 1:
-            raise ValueError("URL list must contain at least 1 URL")
+            raise TypeError(f"URLs must be in list. Recieved: {type(urls).__name__}")
 
         for url in urls:
-            entry = URLEntry(
-                loc=url,
-            )
-            instance.urls.append(entry)
+            if isinstance(url, str):
+                entry = URLEntry(
+                    loc=url,
+                )
+                instance.urls.append(entry)
+            elif isinstance(url, URLEntry):
+                instance.urls.append(url)
 
         return instance
 
@@ -158,7 +166,7 @@ class Sitemap:
             output_filename (str) [Optional]: The desired name of the XML file. Default = "sitemap.xml
 
         Returns:
-            bool: Operation success
+            sitemap: an instance of Sitemap
         """
         if not output_filename:
             output_filename = "sitemap.xml"
@@ -169,7 +177,7 @@ class Sitemap:
             self._append_url_element(root=root, url_entry=url_entry)
 
         tree = ET.ElementTree(root)
-        ET.indent(tree, space="   ")
+        ET.indent(tree, space="   ")  # 3 spaces
         tree.write(output_filename, encoding="utf-8", xml_declaration=True)
 
         return self
@@ -219,3 +227,119 @@ class Sitemap:
 
     def __iter__(self):
         return iter(self.urls)
+
+
+class IndexEntry:
+    def __init__(self, loc: str, lastmod: str = None):
+        self.loc: str = loc
+        self.lastmod: str = lastmod
+
+
+class SitemapIndex:
+    def __init__(self):
+        self.index_entries: list[IndexEntry] = []
+
+    @classmethod
+    def from_file(cls, path: str | Path) -> "SitemapIndex":
+        """
+        Builds SitemapIndex object from provided XML file
+
+        Args:
+            path (str or Path): the filepath to the XML file
+
+        Returns:
+            SitemapIndex: instance of SitemapIndex
+        """
+        instance = cls()
+
+        path = Path(path)
+
+        et = DET.parse(path)
+        root = et.getroot()
+        for element in root.findall(f".//{SITEMAP_NS}sitemap"):
+            loc_element = element.find(f"{SITEMAP_NS}loc")
+            if loc_element is not None and loc_element.text:
+                index_entry = IndexEntry(loc=loc_element.text)
+
+                lastmod_element = element.find(f"{SITEMAP_NS}lastmod")
+                if lastmod_element is not None and lastmod_element.text:
+                    index_entry.lastmod = lastmod_element.text
+
+                instance.index_entries.append(index_entry)
+
+        return instance
+
+    @classmethod
+    def from_list(cls, urls: list[str | IndexEntry]) -> "SitemapIndex":
+        """Builds basic sitemap index from list of URLs, with no additonal attributes"""
+        instance = cls()
+
+        if not isinstance(urls, list):
+            raise TypeError(f"URLs must be in list. Recieved: {type(urls).__name__}")
+
+        for url in urls:
+            if isinstance(url, str):
+                entry = IndexEntry(loc=url)
+                instance.index_entries.append(entry)
+            elif isinstance(url, IndexEntry):
+                instance.index_entries.append(url)
+        
+
+        return instance
+
+    def add_sitemap(self, url: str | IndexEntry, **kwargs) -> "SitemapIndex":
+        """Add sitemap URL entry to index"""
+        if isinstance(url, IndexEntry):
+            self.index_entries.append(url)
+        else:
+            self.index_entries.append(IndexEntry(loc=url, **kwargs))
+
+        return self
+
+    def remove_sitemap(self, url: str) -> "SitemapIndex":
+        """Remove sitemap from sitemap index by URL"""
+        self.index_entries = [u for u in self.index_entries if u.loc != url]
+        
+        return self
+
+    def write_to_file(self, output_filename: str = None) -> "SitemapIndex":
+        """Write a sitemap index XML file from current instance.
+
+        Args:
+            output_filename (str) [Optional]: The desired name of the XML file. Default = "sitemap-index.xml
+
+        Returns:
+            sitemap: an instance of SitemapIndex
+        """
+        if not output_filename:
+            output_filename = "sitemap-index.xml"
+
+        root = ET.Element(
+            "sitemap", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        )
+
+        for sitemap in self.index_entries:
+            self._append_sitemap_element(root=root, index_entry=sitemap)
+
+        tree = ET.ElementTree(root)
+        ET.indent(tree, space="   ")  # 3 spaces
+        tree.write(output_filename, encoding="utf-8", xml_declaration=True)
+
+        return self
+
+    def _append_sitemap_element(self, root: ET.Element, index_entry: IndexEntry):
+        """Append Sitemap element to given root element"""
+        sitemap_element = ET.SubElement(root, "sitemap")
+        loc = ET.SubElement(sitemap_element, "loc")
+
+        loc.text = index_entry.loc
+
+        if index_entry.lastmod is not None:
+            lastmod = ET.SubElement(sitemap_element, "lastmod")
+            lastmod.text = index_entry.lastmod
+
+    def __len__(self):
+        return len(self.index_entries)
+
+    def __iter__(self):
+        return iter(self.index_entries)
