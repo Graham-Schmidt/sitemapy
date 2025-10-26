@@ -1,6 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 import xml.etree.ElementTree as ET
+import gzip
 
 from defusedxml import ElementTree as DET
 
@@ -181,6 +182,33 @@ class Sitemap:
         tree.write(output_filename, encoding="utf-8", xml_declaration=True)
 
         return self
+
+    def write_compressed(self, output_filename: str = None) -> "Sitemap":
+        """
+        Write compressed sitemap file (.xml.gz).
+        
+        Args:
+            output_filename: Output filename (will add .gz if not present)
+            
+        Returns:
+            Path to created file
+        """
+        if not output_filename:
+            output_filename = "sitemap.xml.gz"
+        elif not output_filename.endswith('.gz'):
+            output_filename += '.gz'
+        
+        root = ET.Element("urlset", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9")
+        for url_entry in self.urls:
+            self._append_url_element(root=root, url_entry=url_entry)
+        
+        tree = ET.ElementTree(root)
+        ET.indent(tree, space="   ")
+        
+        with gzip.open(output_filename, 'wb') as f:
+            tree.write(f, encoding='utf-8', xml_declaration=True)
+        
+        return output_filename
 
     def set_all_lastmod(self, date: str) -> "Sitemap":
         """Set lastmod for all URLs to the specified date"""
