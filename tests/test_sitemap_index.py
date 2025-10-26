@@ -4,9 +4,11 @@ from pytest import fixture
 
 from sitemapy import SitemapIndex, IndexEntry
 
+
 @fixture
 def sitemap_text():
     return "https://www.example.com/sitemap-index.xml"
+
 
 @fixture
 def index_entry():
@@ -19,11 +21,13 @@ def test_add_sitemap_string(sitemap_text):
     index.add_sitemap(sitemap_text)
     assert len(index) == 2
 
+
 def test_add_sitemap_entry(sitemap_text, index_entry):
     index = SitemapIndex.from_list([sitemap_text])
     assert len(index) == 1
     index.add_sitemap(index_entry)
     assert len(index) == 2
+
 
 def test_remove_sitemap(index_entry):
     index = SitemapIndex.from_list([index_entry])
@@ -31,6 +35,7 @@ def test_remove_sitemap(index_entry):
     index.remove_sitemap(url)
 
     assert len(index) == 0
+
 
 def test_write_to_file_creates_file(tmp_path, index_entry):
     """Test that a file is created"""
@@ -40,6 +45,7 @@ def test_write_to_file_creates_file(tmp_path, index_entry):
 
     assert filename.exists()
 
+
 def test_write_to_file_default_filename(tmp_path, index_entry, monkeypatch):
     """Test that default filename 'sitemap-index.xml' is uesd when none provided"""
     index = SitemapIndex.from_list([index_entry])
@@ -48,6 +54,7 @@ def test_write_to_file_default_filename(tmp_path, index_entry, monkeypatch):
     index.write_to_file()
 
     assert (tmp_path / "sitemap-index.xml").exists()
+
 
 def test_write_to_file_content_accuracy(tmp_path):
     """Test that written XML contains correct index entries"""
@@ -65,18 +72,19 @@ def test_write_to_file_content_accuracy(tmp_path):
 
     assert written_urls == urls
 
+
 def test_write_to_file_with_metadata(tmp_path):
     """Test that IndexEntry metadata (lastmod) is written correctly"""
     index = SitemapIndex()
     index.add_sitemap("https://example.com/sitemap.xml", lastmod="2025-12-01")
     output_file = tmp_path / "output.xml"
-    
+
     index.write_to_file(str(output_file))
-    
+
     tree = ET.parse(output_file)
     root = tree.getroot()
-    
+
     index_element = root.find(".//{http://www.sitemaps.org/schemas/sitemap/0.9}sitemap")
     lastmod = index_element.find("{http://www.sitemaps.org/schemas/sitemap/0.9}lastmod")
-    
+
     assert lastmod.text == "2025-12-01"

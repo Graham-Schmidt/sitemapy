@@ -76,6 +76,7 @@ def test_from_file():
     assert second_sitemap.urls[0].priority is not None
     assert second_sitemap.urls[0].changefreq is not None
 
+
 def test_write_to_file_creates_file(tmp_path, url_entry):
     """Test that a file is created"""
     sitemap = Sitemap.from_list([url_entry])
@@ -84,13 +85,14 @@ def test_write_to_file_creates_file(tmp_path, url_entry):
 
     assert filename.exists()
 
+
 def test_write_to_file_default_filename(tmp_path, url_entry, monkeypatch):
     """Test that default filename 'sitemap.xml' is used when none provided"""
     sitemap = Sitemap.from_list([url_entry])
     monkeypatch.chdir(tmp_path)
-    
+
     sitemap.write_to_file()
-    
+
     assert (tmp_path / "sitemap.xml").exists()
 
 
@@ -99,15 +101,15 @@ def test_write_to_file_content_accuracy(tmp_path):
     urls = ["https://example.com/", "https://example.com/about/"]
     sitemap = Sitemap.from_list(urls)
     output_file = tmp_path / "output.xml"
-    
+
     sitemap.write_to_file(str(output_file))
-    
+
     tree = ET.parse(output_file)
     root = tree.getroot()
-    
+
     loc_elements = root.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc")
     written_urls = [loc.text for loc in loc_elements]
-    
+
     assert written_urls == urls
 
 
@@ -116,15 +118,15 @@ def test_write_to_file_with_metadata(tmp_path):
     sitemap = Sitemap()
     sitemap.add_url("https://example.com/", lastmod="2025-10-25", priority=0.9)
     output_file = tmp_path / "metadata.xml"
-    
+
     sitemap.write_to_file(str(output_file))
-    
+
     tree = ET.parse(output_file)
     root = tree.getroot()
-    
+
     url_elem = root.find(".//{http://www.sitemaps.org/schemas/sitemap/0.9}url")
     lastmod = url_elem.find("{http://www.sitemaps.org/schemas/sitemap/0.9}lastmod")
     priority = url_elem.find("{http://www.sitemaps.org/schemas/sitemap/0.9}priority")
-    
+
     assert lastmod.text == "2025-10-25"
     assert priority.text == "0.9"
