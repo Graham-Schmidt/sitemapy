@@ -403,7 +403,6 @@ Valid `changefreq` values:
 ### Performance Tips
 - Use compression (`write_compressed()`) for large sitemaps
 - Generate sitemaps incrementally during off-peak hours
-- Cache generated sitemaps and regenerate only when content changes
 - Submit sitemap location to search engines via robots.txt:
   ```
   Sitemap: https://example.com/sitemap.xml
@@ -414,6 +413,7 @@ Valid `changefreq` values:
 - Use correct language codes (ISO 639-1) and optional region codes (ISO 3166-1 Alpha 2)
 - Ensure all alternate URLs are accessible and return 200 status codes
 - Common format: `en-US`, `de-DE`, `es-ES`, `fr-FR`
+- See Google's documentation [here](https://developers.google.com/search/docs/specialty/international/localized-versions#sitemap).
 
 ## Requirements
 
