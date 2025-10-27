@@ -218,3 +218,4 @@ __marimo__/
 # Custom
 *demo*
 *.xml
+*DS_Store
