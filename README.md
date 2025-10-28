@@ -418,7 +418,7 @@ Valid `changefreq` values:
 ## Requirements
 
 - Python 3.10+
-- defusedxml 0.7.1
+- defusedxml 0.7.0
 
 ## Contributing
 
