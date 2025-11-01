@@ -179,7 +179,7 @@ class Sitemap:
 
         tree = ET.ElementTree(root)
         ET.indent(tree, space="   ")  # 3 spaces
-        tree.write(output_filename, encoding="utf-8", xml_declaration=True)
+        tree.write(output_filename, encoding="UTF-8", xml_declaration=True)
 
         return self
 
@@ -206,7 +206,7 @@ class Sitemap:
         ET.indent(tree, space="   ")
 
         with gzip.open(output_filename, "wb") as f:
-            tree.write(f, encoding="utf-8", xml_declaration=True)
+            tree.write(f, encoding="UTF-8", xml_declaration=True)
 
         return output_filename
 
@@ -350,7 +350,7 @@ class SitemapIndex:
 
         tree = ET.ElementTree(root)
         ET.indent(tree, space="   ")  # 3 spaces
-        tree.write(output_filename, encoding="utf-8", xml_declaration=True)
+        tree.write(output_filename, encoding="UTF-8", xml_declaration=True)
 
         return self
 
