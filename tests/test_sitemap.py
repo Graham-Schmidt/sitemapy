@@ -52,13 +52,13 @@ def test_deduplicate(url_text):
     assert len(sitemap) == 1
 
 
-def test_from_list(url_text):
+def test_plain_urls_from_list(url_text):
     sitemap = Sitemap.from_list([url_text])
     assert type(sitemap) == Sitemap
     assert len(sitemap) == 1
 
 
-def test_from_file():
+def test_plain_urls_from_file():
     # From string
     sitemap = Sitemap.from_file("tests/test-sitemap.xml")
     assert type(sitemap) == Sitemap
@@ -100,6 +100,12 @@ def test_write_to_file_content_accuracy(tmp_path):
     """Test that written XML contains correct URL entries"""
     urls = ["https://example.com/", "https://example.com/about/"]
     sitemap = Sitemap.from_list(urls)
+
+    # Append image
+    image_url = "https://example.com/cat.png"
+    first = sitemap.urls[0]
+    first.add_image(image_url)
+
     output_file = tmp_path / "output.xml"
 
     sitemap.write_to_file(str(output_file))
@@ -109,6 +115,9 @@ def test_write_to_file_content_accuracy(tmp_path):
 
     loc_elements = root.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc")
     written_urls = [loc.text for loc in loc_elements]
+    # PICKUP write actual test for images
+    # I dont' currently grab url elements
+    image_urls = []
 
     assert written_urls == urls
 
@@ -130,3 +139,22 @@ def test_write_to_file_with_metadata(tmp_path):
 
     assert lastmod.text == "2025-10-25"
     assert priority.text == "0.9"
+
+
+def test_write_to_file_namespaces(tmp_path, url_text):
+    """Test that appropriate namespaces get written per element included in sitemap"""
+    sitemap = Sitemap()
+    url = URLEntry(loc=url_text)
+    url.add_image(image="https://www.example.com/cat.png/")
+    sitemap.add_url(url)
+    output_file = tmp_path / "namespaces.xml"
+
+    sitemap.write_to_file(str(output_file))
+
+    with open(output_file, "r") as f:
+        content = f.read()
+
+    # Image namespace
+    assert 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' in content
+    assert "xmlns:image" in content
+    assert "http://www.google.com/schemas/sitemap-image/1.1" in content

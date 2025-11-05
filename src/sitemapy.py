@@ -6,6 +6,12 @@ import gzip
 from defusedxml import ElementTree as DET
 
 SITEMAP_NS = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
+IMAGE_NS = "{http://www.google.com/schemas/sitemap-image/1.1}"
+
+
+class ImageEntry:
+    def __init__(self, loc: str):
+        self.loc = loc
 
 
 class URLEntry:
@@ -21,6 +27,7 @@ class URLEntry:
         self.changefreq = changefreq
         self.priority = priority
         self.hreflang_alts: list[HreflangAlternate] = []
+        self.images: list[ImageEntry] = []
 
     def add_alternate(
         self, href_alt=None, hreflang: str = "", href: str = ""
@@ -55,6 +62,34 @@ class URLEntry:
 
         return self
 
+    def add_image(self, image: str | ImageEntry) -> "URLEntry":
+        """Append image element to URLEntry"""
+        self._add_element(image, ImageEntry)
+
+        return self
+
+    def _add_element(self, data, class_type, **kwargs):
+        """handler to append element to XML tree by type"""
+        if isinstance(data, class_type):
+            self._get_collections(class_type).append(data)
+
+            return
+
+        constructors = {
+            ImageEntry: lambda d, **kw: ImageEntry(loc=d),
+        }
+
+        handler = constructors[class_type]
+        if handler:
+            self._get_collections(class_type).append(handler(data, **kwargs))
+        else:
+            raise TypeError(f"Unsupported type: {class_type}")
+
+    def _get_collections(self, class_type):
+        collections = {ImageEntry: self.images}
+
+        return collections[class_type]
+
 
 class HreflangAlternate:
     def __init__(self, hreflang: str, href: str):
@@ -85,26 +120,8 @@ class Sitemap:
         et = DET.parse(path)
         root = et.getroot()
         for element in root.findall(f".//{SITEMAP_NS}url"):
-            loc_element = element.find(f"{SITEMAP_NS}loc")
-            if loc_element is not None and loc_element.text:
-                url_entry = URLEntry(loc=loc_element.text)
-
-                lastmod_element = element.find(f"{SITEMAP_NS}lastmod")
-
-                if lastmod_element is not None and lastmod_element.text:
-                    url_entry.lastmod = lastmod_element.text
-
-                priority_element = element.find(f"{SITEMAP_NS}priority")
-
-                if priority_element is not None and priority_element.text:
-                    url_entry.priority = float(priority_element.text)
-
-                changefreq_element = element.find(f"{SITEMAP_NS}changefreq")
-
-                if changefreq_element is not None and changefreq_element.text:
-                    url_entry.changefreq = changefreq_element.text
-
-                instance.urls.append(url_entry)
+            url_entry = cls._build_url_entry(url_element=element)
+            instance.urls.append(url_entry)
 
         return instance
 
@@ -127,6 +144,44 @@ class Sitemap:
 
         return instance
 
+    @classmethod
+    def _build_url_entry(cls, url_element: ET.Element) -> "URLEntry":
+        """Construct a URL Element"""
+        loc_element = url_element.find(f"{SITEMAP_NS}loc")
+        if loc_element is not None and loc_element.text:
+            url_entry = URLEntry(loc=loc_element.text)
+
+            lastmod_element = url_element.find(f"{SITEMAP_NS}lastmod")
+
+            if lastmod_element is not None and lastmod_element.text:
+                url_entry.lastmod = lastmod_element.text
+
+            priority_element = url_element.find(f"{SITEMAP_NS}priority")
+
+            if priority_element is not None and priority_element.text:
+                url_entry.priority = float(priority_element.text)
+
+            changefreq_element = url_element.find(f"{SITEMAP_NS}changefreq")
+
+            if changefreq_element is not None and changefreq_element.text:
+                url_entry.changefreq = changefreq_element.text
+
+            image_element = url_element.find(f"{IMAGE_NS}image")
+            if image_element:
+                image_entry = cls._build_image_entry(image_element)
+                url_entry.images.append(image_entry)
+
+        return url_entry
+
+    @classmethod
+    def _build_image_entry(cls, image_element: ET.Element) -> "ImageEntry":
+        """Construct an Image element"""
+        loc_element = image_element.find(f"{IMAGE_NS}loc")
+        if loc_element is not None and loc_element.text:
+            image_entry = ImageEntry(loc=loc_element.text)
+
+        return image_entry
+
     def add_url(self, url: str | URLEntry, **kwargs) -> "Sitemap":
         """Add URL entry to sitemap"""
         if isinstance(url, URLEntry):
@@ -139,25 +194,29 @@ class Sitemap:
     def remove_url(self, url: str) -> "Sitemap":
         """Remove URL from sitemap"""
         self.urls = [u for u in self.urls if u.loc != url]
+
         return self
 
     def get_urls_by_pattern(self, pattern: str) -> list["URLEntry"]:
-        """Get list of URLEntries matching pattern"""
+        """Get list of URLEntry objects matching regex pattern"""
         import re
 
         regex = re.compile(pattern)
         res = [u for u in self.urls if regex.search(u.loc)]
+
         return res
 
     def deduplicate(self) -> "Sitemap":
-        """Remove duplicate URLs"""
+        """Remove duplicate all elements by URLs"""
+
         seen = set()
         unique = []
-        for u in self.urls:
-            if u.loc not in seen:
-                seen.add(u.loc)
-                unique.append(u)
+        for i in self.urls:
+            if i.loc not in seen:
+                seen.add(i.loc)
+                unique.append(i)
         self.urls = unique
+
         return self
 
     def write_to_file(self, output_filename: str = None) -> "Sitemap":
@@ -172,7 +231,13 @@ class Sitemap:
         if not output_filename:
             output_filename = "sitemap.xml"
 
-        root = ET.Element("urlset", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9")
+        urlset_attrib = self._get_required_namespaces()
+
+        root = ET.Element(
+            "urlset",
+            xmlns="http://www.sitemaps.org/schemas/sitemap/0.9",
+            attrib=urlset_attrib,
+        )
 
         for url_entry in self.urls:
             self._append_url_element(root=root, url_entry=url_entry)
@@ -249,6 +314,25 @@ class Sitemap:
                     hreflang=alt.hreflang,
                     href=alt.href,
                 )
+
+        if url_entry.images:
+            for image in url_entry.images:
+                self._append_image_element(url_elem=url_elem, image_entry=image)
+
+    def _append_image_element(self, url_elem: ET.Element, image_entry: ImageEntry):
+        """Append Image element to URL element"""
+        image = ET.SubElement(url_elem, "image:image")
+        image_loc = ET.SubElement(image, "image:loc")
+        image_loc.text = image_entry.loc
+
+    def _get_required_namespaces(self):
+        namespaces = {}
+        if any(url.images for url in self.urls):
+            namespaces["xmlns:image"] = (
+                "http://www.google.com/schemas/sitemap-image/1.1"
+            )
+
+        return namespaces
 
     def __len__(self):
         return len(self.urls)
