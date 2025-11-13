@@ -7,11 +7,26 @@ from defusedxml import ElementTree as DET
 
 SITEMAP_NS = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
 IMAGE_NS = "{http://www.google.com/schemas/sitemap-image/1.1}"
+NEWS_NS = "{http://www.google.com/schemas/sitemap-news/0.9}"
 
 
 class ImageEntry:
     def __init__(self, loc: str):
         self.loc = loc
+
+
+class NewsEntry:
+    def __init__(
+        self,
+        publication_name: str | None = None,
+        publication_language: str | None = None,
+        publication_date: str | None = None,
+        title: str | None = None,
+    ):
+        self.publication_name = publication_name
+        self.publication_language = publication_language
+        self.publication_date = publication_date
+        self.title = title
 
 
 class URLEntry:
@@ -28,6 +43,7 @@ class URLEntry:
         self.priority = priority
         self.hreflang_alts: list[HreflangAlternate] = []
         self.images: list[ImageEntry] = []
+        self.news_entry: NewsEntry = None
 
     def add_alternate(
         self, href_alt=None, hreflang: str = "", href: str = ""
@@ -68,11 +84,23 @@ class URLEntry:
 
         return self
 
+    def add_news_entry(self, news_entry: NewsEntry) -> "URLEntry":
+        """Append news element to URLEntry - requires NewsEntry object"""
+        self._add_element(news_entry, NewsEntry)
+
+        return self
+
     def _add_element(self, data, class_type, **kwargs):
         """handler to append element to XML tree by type"""
-        if isinstance(data, class_type):
-            self._get_collections(class_type).append(data)
+        # if isinstance(data, class_type):
+        #     self._get_collections(class_type).append(data)
 
+        #     return
+        if isinstance(data, ImageEntry):
+            self.images.append(data)
+            return
+        elif isinstance(data, NewsEntry):
+            self.news_entry = data
             return
 
         constructors = {
@@ -87,7 +115,6 @@ class URLEntry:
 
     def _get_collections(self, class_type):
         collections = {ImageEntry: self.images}
-
         return collections[class_type]
 
 
@@ -166,10 +193,17 @@ class Sitemap:
             if changefreq_element is not None and changefreq_element.text:
                 url_entry.changefreq = changefreq_element.text
 
+            # Handle image elements
             image_element = url_element.find(f"{IMAGE_NS}image")
             if image_element:
                 image_entry = cls._build_image_entry(image_element)
                 url_entry.images.append(image_entry)
+
+            # Handle news elements
+            news_element = url_element.find(f"{NEWS_NS}news")
+            if news_element:
+                news_entry = cls._build_news_entry(news_element)
+                url_entry.news_entry = news_entry
 
         return url_entry
 
@@ -181,6 +215,25 @@ class Sitemap:
             image_entry = ImageEntry(loc=loc_element.text)
 
         return image_entry
+
+    @classmethod
+    def _build_news_entry(cls, news_element: ET.Element) -> "NewsEntry":
+        """Construct a News element"""
+        publication_element = news_element.find(f"{NEWS_NS}publication")
+        date_element = news_element.find(f"{NEWS_NS}publication_date")
+        title_element = news_element.find(f"{NEWS_NS}title")
+
+        name_element = publication_element.find(f"{NEWS_NS}name")
+        language_element = publication_element.find(f"{NEWS_NS}language")
+
+        news_entry = NewsEntry(
+            publication_name=name_element.text,
+            publication_language=language_element.text,
+            publication_date=date_element.text,
+            title=title_element.text,
+        )
+
+        return news_entry
 
     def add_url(self, url: str | URLEntry, **kwargs) -> "Sitemap":
         """Add URL entry to sitemap"""
@@ -319,18 +372,57 @@ class Sitemap:
             for image in url_entry.images:
                 self._append_image_element(url_elem=url_elem, image_entry=image)
 
+        if url_entry.news_entry:
+            self._append_news_element(
+                url_elem=url_elem, news_entry=url_entry.news_entry
+            )
+
     def _append_image_element(self, url_elem: ET.Element, image_entry: ImageEntry):
         """Append Image element to URL element"""
         image = ET.SubElement(url_elem, "image:image")
         image_loc = ET.SubElement(image, "image:loc")
         image_loc.text = image_entry.loc
 
+    def _append_news_element(self, url_elem: ET.Element, news_entry: NewsEntry):
+        """Append News element to URL element"""
+        news_parent_element = ET.SubElement(url_elem, "news:news")
+
+        if news_entry.publication_name or news_entry.publication_language:
+            publication_parent_element = ET.SubElement(
+                news_parent_element, "news:publication"
+            )
+
+            if news_entry.publication_name:
+                pub_name_element = ET.SubElement(
+                    publication_parent_element, "news:name"
+                )
+                pub_name_element.text = news_entry.publication_name
+
+            if news_entry.publication_language:
+                pub_language_element = ET.SubElement(
+                    publication_parent_element, "news:language"
+                )
+                pub_language_element.text = news_entry.publication_language
+
+        if news_entry.publication_date:
+            pub_date_element = ET.SubElement(
+                news_parent_element, "news:publication_date"
+            )
+            pub_date_element.text = news_entry.publication_date
+
+        if news_entry.title:
+            title_element = ET.SubElement(news_parent_element, "news:title")
+            title_element.text = news_entry.title
+
     def _get_required_namespaces(self):
+        """Return XML namespace per element type to be written to file"""
         namespaces = {}
         if any(url.images for url in self.urls):
             namespaces["xmlns:image"] = (
                 "http://www.google.com/schemas/sitemap-image/1.1"
             )
+        if any(url.news_entry for url in self.urls):
+            namespaces["xmlns:news"] = "http://www.google.com/schemas/sitemap-news/0.9"
 
         return namespaces
 

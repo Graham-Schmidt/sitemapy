@@ -25,6 +25,9 @@
   - [Hreflang Support](#hreflang-support)
   - [Sitemap Index](#sitemap-index)
   - [Compression](#compression)
+- [Sitemap Extensions](#sitemap-extensions)
+    - [Images](#images)
+    - [News](#news)
 - [Real-World Examples](#real-world-examples)
 - [API Reference](#api-reference)
 - [Best Practices](#best-practices)
@@ -192,6 +195,42 @@ sitemap.write_compressed("sitemap.xml.gz")
 
 # Or let it use the default name
 sitemap.write_compressed()  # Creates sitemap.xml.gz
+```
+
+## Sitemap Extensions
+Google recognizes a [set of extensions](https://developers.google.com/search/docs/crawling-indexing/sitemaps/combine-sitemap-extensions) for sitemaps. Sitemapy can intake and create News and Image elements (Video coming soon...)
+
+URLEntry can contain an arrays of ImageEntry. URLEntry can contain a single NewsEntry.
+
+### Images
+
+```python
+from sitemapy import URLEntry, ImageEntry
+url = URLEntry(loc="https://www.example.com/")
+
+# Create an image with just a URL string
+url.add_image(loc="https://www.example.com/cat.png/")
+
+# Create an image from an ImageEntry
+image_entry = ImageEntry(loc="https://www.example.com/cat.png/")
+url.add_image(image_entry)
+```
+
+### News
+News elements can only be added by building a NewsEntry object.
+
+```python
+from sitemapy import URLEntry, NewsEntry
+url = URLEntry(loc="https://www.example.com/")
+
+news_entry = NewsEntry(
+        publication_name="The New York Times",
+        publication_language="en",
+        publication_date="2025-12-01",
+        title="First Contact Made"
+    )
+
+url.add_news_entry(news_entry)
 ```
 
 ## Real-World Examples
