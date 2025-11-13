@@ -1,4 +1,7 @@
 # Sitemapy
+[![PyPI version](https://badge.fury.io/py/sitemapy.svg)](https://badge.fury.io/py/sitemapy)
+[![Python Support](https://img.shields.io/pypi/pyversions/sitemapy.svg)](https://pypi.org/project/sitemapy/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Sitemapy** is a Python package for generating SEO-friendly XML sitemaps.
 
@@ -465,6 +468,10 @@ Valid `changefreq` values:
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+## Security
+
+Sitemapy uses [defusedxml](https://pypi.org/project/defusedxml/) instead of Python's standard XML library when parsing external sitemap files. This protects against XML vulnerabilities like billion laughs attacks and XML external entity (XXE) attacks that could occur when loading untrusted sitemap files.
 
 ### Development Setup
 

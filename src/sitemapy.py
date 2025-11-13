@@ -3,7 +3,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 import gzip
 
-from defusedxml import ElementTree as DET
+from defusedxml import ElementTree as DefusedElementTree
 
 SITEMAP_NS = "{http://www.sitemaps.org/schemas/sitemap/0.9}"
 IMAGE_NS = "{http://www.google.com/schemas/sitemap-image/1.1}"
@@ -92,10 +92,6 @@ class URLEntry:
 
     def _add_element(self, data, class_type, **kwargs):
         """handler to append element to XML tree by type"""
-        # if isinstance(data, class_type):
-        #     self._get_collections(class_type).append(data)
-
-        #     return
         if isinstance(data, ImageEntry):
             self.images.append(data)
             return
@@ -144,7 +140,7 @@ class Sitemap:
 
         path = Path(path)
 
-        et = DET.parse(path)
+        et = DefusedElementTree.parse(path)
         root = et.getroot()
         for element in root.findall(f".//{SITEMAP_NS}url"):
             url_entry = cls._build_url_entry(url_element=element)
@@ -458,7 +454,7 @@ class SitemapIndex:
 
         path = Path(path)
 
-        et = DET.parse(path)
+        et = DefusedElementTree.parse(path)
         root = et.getroot()
         for element in root.findall(f".//{SITEMAP_NS}sitemap"):
             loc_element = element.find(f"{SITEMAP_NS}loc")
