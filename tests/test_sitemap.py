@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 
 from pytest import fixture
 
-from sitemapy import Sitemap, URLEntry
+from sitemapy import Sitemap, URLEntry, NewsEntry, NEWS_NS, IMAGE_NS, SITEMAP_NS
 
 
 @fixture
@@ -15,6 +15,17 @@ def url_text():
 @fixture
 def url_entry():
     return URLEntry(loc="https://www.test.com/")
+
+
+@fixture
+def news_entry():
+    entry = NewsEntry(
+        publication_name="The New York Times",
+        publication_language="en",
+        publication_date="2025-12-01",
+        title="First Contact Made",
+    )
+    return entry
 
 
 def test_add_url_list(url_text):
@@ -96,7 +107,7 @@ def test_write_to_file_default_filename(tmp_path, url_entry, monkeypatch):
     assert (tmp_path / "sitemap.xml").exists()
 
 
-def test_write_to_file_content_accuracy(tmp_path):
+def test_write_to_file_content_accuracy(news_entry, tmp_path):
     """Test that written XML contains correct URL entries"""
     urls = ["https://example.com/", "https://example.com/about/"]
     sitemap = Sitemap.from_list(urls)
@@ -106,6 +117,10 @@ def test_write_to_file_content_accuracy(tmp_path):
     first = sitemap.urls[0]
     first.add_image(image_url)
 
+    # Append news
+    news_entry = news_entry
+    first.add_news_entry(news_entry)
+
     output_file = tmp_path / "output.xml"
 
     sitemap.write_to_file(str(output_file))
@@ -113,13 +128,30 @@ def test_write_to_file_content_accuracy(tmp_path):
     tree = ET.parse(output_file)
     root = tree.getroot()
 
-    loc_elements = root.findall(".//{http://www.sitemaps.org/schemas/sitemap/0.9}loc")
+    # URL elements
+    loc_elements = root.findall(f".//{SITEMAP_NS}loc")
     written_urls = [loc.text for loc in loc_elements]
-    # PICKUP write actual test for images
-    # I dont' currently grab url elements
-    image_urls = []
+
+    # Image elements
+    image_loc_element = root.findall(f".//{IMAGE_NS}loc")
+    image_url_text = image_loc_element[0].text
+
+    # New elements
+    news_parent_element = root.findall(f".//{NEWS_NS}news")[0]
+    pub_parent_element = news_parent_element.find(f".//{NEWS_NS}publication")
+    pub_name = pub_parent_element.find(f".//{NEWS_NS}name")
+    pub_language = pub_parent_element.find(f".//{NEWS_NS}language")
+
+    news_pub_date = news_parent_element.find(f".//{NEWS_NS}publication_date")
+    news_title = news_parent_element.find(f".//{NEWS_NS}title")
 
     assert written_urls == urls
+    assert image_url == image_url_text
+
+    assert pub_name.text == "The New York Times"
+    assert pub_language.text == "en"
+    assert news_pub_date.text == "2025-12-01"
+    assert news_title.text == "First Contact Made"
 
 
 def test_write_to_file_with_metadata(tmp_path):
@@ -133,9 +165,9 @@ def test_write_to_file_with_metadata(tmp_path):
     tree = ET.parse(output_file)
     root = tree.getroot()
 
-    url_elem = root.find(".//{http://www.sitemaps.org/schemas/sitemap/0.9}url")
-    lastmod = url_elem.find("{http://www.sitemaps.org/schemas/sitemap/0.9}lastmod")
-    priority = url_elem.find("{http://www.sitemaps.org/schemas/sitemap/0.9}priority")
+    url_elem = root.find(f".//{SITEMAP_NS}url")
+    lastmod = url_elem.find(f"{SITEMAP_NS}lastmod")
+    priority = url_elem.find(f"{SITEMAP_NS}priority")
 
     assert lastmod.text == "2025-10-25"
     assert priority.text == "0.9"

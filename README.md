@@ -1,4 +1,7 @@
 # Sitemapy
+[![PyPI version](https://badge.fury.io/py/sitemapy.svg)](https://badge.fury.io/py/sitemapy)
+[![Python Support](https://img.shields.io/pypi/pyversions/sitemapy.svg)](https://pypi.org/project/sitemapy/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Sitemapy** is a Python package for generating SEO-friendly XML sitemaps.
 
@@ -25,6 +28,9 @@
   - [Hreflang Support](#hreflang-support)
   - [Sitemap Index](#sitemap-index)
   - [Compression](#compression)
+- [Sitemap Extensions](#sitemap-extensions)
+    - [Images](#images)
+    - [News](#news)
 - [Real-World Examples](#real-world-examples)
 - [API Reference](#api-reference)
 - [Best Practices](#best-practices)
@@ -192,6 +198,45 @@ sitemap.write_compressed("sitemap.xml.gz")
 
 # Or let it use the default name
 sitemap.write_compressed()  # Creates sitemap.xml.gz
+```
+
+## Sitemap Extensions
+Google recognizes a [set of extensions](https://developers.google.com/search/docs/crawling-indexing/sitemaps/combine-sitemap-extensions) for sitemaps. Sitemapy can intake and create News and Image elements (Video coming soon...)
+
+URLEntry can contain an arrays of ImageEntry. URLEntry can contain a single NewsEntry.
+
+### Images
+
+```python
+from sitemapy import URLEntry, ImageEntry
+url = URLEntry(loc="https://www.example.com/")
+
+# Create image(s) with just a URL string
+url.add_image(image="https://www.example.com/cat.png/")
+url.add_image(image="https://www.example.com/dog.png/")
+
+# Create image(s) from an ImageEntry
+image_entry_one = ImageEntry(image="https://www.example.com/cat.png/")
+image_entry_two = ImageEntry(image="https://www.example.com/dog.png/")
+url.add_image(image_entry_one)
+url.add_image(image_entry_two)
+```
+
+### News
+News elements can only be added by building a NewsEntry object.
+
+```python
+from sitemapy import URLEntry, NewsEntry
+url = URLEntry(loc="https://www.example.com/")
+
+news_entry = NewsEntry(
+        publication_name="The New York Times",
+        publication_language="en",
+        publication_date="2025-12-01",
+        title="First Contact Made"
+    )
+
+url.add_news_entry(news_entry)
 ```
 
 ## Real-World Examples
@@ -423,6 +468,10 @@ Valid `changefreq` values:
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+
+## Security
+
+Sitemapy uses [defusedxml](https://pypi.org/project/defusedxml/) instead of Python's standard XML library when parsing external sitemap files. This protects against XML vulnerabilities like billion laughs attacks and XML external entity (XXE) attacks that could occur when loading untrusted sitemap files.
 
 ### Development Setup
 
