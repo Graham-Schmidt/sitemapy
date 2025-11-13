@@ -208,12 +208,15 @@ URLEntry can contain an arrays of ImageEntry. URLEntry can contain a single News
 from sitemapy import URLEntry, ImageEntry
 url = URLEntry(loc="https://www.example.com/")
 
-# Create an image with just a URL string
-url.add_image(loc="https://www.example.com/cat.png/")
+# Create image(s) with just a URL string
+url.add_image(image="https://www.example.com/cat.png/")
+url.add_image(image="https://www.example.com/dog.png/")
 
-# Create an image from an ImageEntry
-image_entry = ImageEntry(loc="https://www.example.com/cat.png/")
-url.add_image(image_entry)
+# Create image(s) from an ImageEntry
+image_entry_one = ImageEntry(image="https://www.example.com/cat.png/")
+image_entry_two = ImageEntry(image="https://www.example.com/dog.png/")
+url.add_image(image_entry_one)
+url.add_image(image_entry_two)
 ```
 
 ### News
