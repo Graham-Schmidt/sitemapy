@@ -41,9 +41,15 @@ def test_add_url_entry(url_entry, url_text):
     assert "test" in sitemap.urls[1].loc
 
 
-def test_remove_url(url_text):
+def test_remove_url_string(url_text):
     sitemap = Sitemap.from_list([url_text])
     sitemap.remove_url(url_text)
+    assert len(sitemap) == 0
+
+
+def test_remove_url_object(url_entry):
+    sitemap = Sitemap.from_list([url_entry])
+    sitemap.remove_url(url_entry)
     assert len(sitemap) == 0
 
 

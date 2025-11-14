@@ -9,7 +9,7 @@ from .sitemapy import (
     NewsEntry,
     SITEMAP_NS,
     IMAGE_NS,
-    NEWS_NS
+    NEWS_NS,
 )
 
 __all__ = [
@@ -22,6 +22,6 @@ __all__ = [
     "NewsEntry",
     "SITEMAP_NS",
     "IMAGE_NS",
-    "NEWS_NS"
+    "NEWS_NS",
 ]
 __version__ = "0.2.1"
