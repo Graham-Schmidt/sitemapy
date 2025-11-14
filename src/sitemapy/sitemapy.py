@@ -240,9 +240,12 @@ class Sitemap:
 
         return self
 
-    def remove_url(self, url: str) -> "Sitemap":
+    def remove_url(self, url: str | URLEntry) -> "Sitemap":
         """Remove URL from sitemap"""
-        self.urls = [u for u in self.urls if u.loc != url]
+        if isinstance(url, str):
+            self.urls = [u for u in self.urls if u.loc != url]
+        elif isinstance(url, URLEntry):
+            self.urls = [u for u in self.urls if u.loc != url.loc]
 
         return self
 
