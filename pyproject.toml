@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sitemapy"
-version = "0.2.1"
+version = "0.2.2"
 readme="README.md"
 authors = [
     { name="Graham Schmidt", email="graham.n.schmidt@gmail.com" },
