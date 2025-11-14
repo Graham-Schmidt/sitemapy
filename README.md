@@ -1,5 +1,5 @@
 # Sitemapy
-[![PyPI version](https://badge.fury.io/py/sitemapy.svg)](https://badge.fury.io/py/sitemapy)
+![PyPI - Version](https://img.shields.io/pypi/v/sitemapy)
 [![Python Support](https://img.shields.io/pypi/pyversions/sitemapy.svg)](https://pypi.org/project/sitemapy/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
