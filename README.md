@@ -378,6 +378,8 @@ URLEntry(
 **Methods:**
 - `add_alternate(href_alt=None, hreflang="", href="")` - Add single hreflang alternate
 - `add_alternates(alternates)` - Add multiple hreflang alternates from list of dicts
+- `add_image(image)` - Add single image element from string or ImageEntry object
+- `add_news_entry(news_entry)` - Add single news element from NewsEntry object
 
 ### HreflangAlternate
 
