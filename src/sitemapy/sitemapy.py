@@ -110,6 +110,7 @@ class URLEntry:
             raise TypeError(f"Unsupported type: {class_type}")
 
     def _get_collections(self, class_type):
+        """return storage collection per class type"""
         collections = {ImageEntry: self.images}
         return collections[class_type]
 
@@ -152,9 +153,6 @@ class Sitemap:
     def from_list(cls, urls: list[str | URLEntry]) -> "Sitemap":
         """Builds basic sitemap from list of URLs, with no additonal attributes"""
         instance = cls()
-
-        if not isinstance(urls, list):
-            raise TypeError(f"URLs must be in list. Recieved: {type(urls).__name__}")
 
         for url in urls:
             if isinstance(url, str):
@@ -259,7 +257,7 @@ class Sitemap:
         return res
 
     def deduplicate(self) -> "Sitemap":
-        """Remove duplicate all elements by URLs"""
+        """Removes duplicate elements by loc value"""
 
         seen = set()
         unique = []
@@ -325,7 +323,7 @@ class Sitemap:
         with gzip.open(output_filename, "wb") as f:
             tree.write(f, encoding="UTF-8", xml_declaration=True)
 
-        return output_filename
+        return self
 
     def set_all_lastmod(self, date: str) -> "Sitemap":
         """Set lastmod for all URLs to the specified date"""
@@ -478,7 +476,7 @@ class SitemapIndex:
         instance = cls()
 
         if not isinstance(urls, list):
-            raise TypeError(f"URLs must be in list. Recieved: {type(urls).__name__}")
+            raise TypeError(f"URLs must be in list. received: {type(urls).__name__}")
 
         for url in urls:
             if isinstance(url, str):

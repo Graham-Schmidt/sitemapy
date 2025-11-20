@@ -27,6 +27,11 @@ def news_entry():
     )
     return entry
 
+def test_empty_url_list():
+    sitemap = Sitemap.from_list([])
+    assert len(sitemap) == 0
+    assert type(sitemap) == Sitemap
+
 
 def test_add_url_list(url_text):
     sitemap = Sitemap.from_list([url_text])

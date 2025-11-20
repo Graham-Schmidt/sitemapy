@@ -24,4 +24,4 @@ __all__ = [
     "IMAGE_NS",
     "NEWS_NS",
 ]
-__version__ = "0.2.3"
+__version__ = "0.2.4"
